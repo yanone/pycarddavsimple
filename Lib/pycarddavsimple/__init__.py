@@ -69,7 +69,7 @@ class PyCardDAV(object):
     """
 
     def __init__(self, resource, debug='', user='', passwd='',
-                 verify=True, write_support=False, auth='basic'):
+                 verify=True, write_support=False, auth='basic', verifyDAV = False):
         #shutup urllib3
         urllog = logging.getLogger('requests.packages.urllib3.connectionpool')
         urllog.setLevel(logging.CRITICAL)
@@ -92,15 +92,16 @@ class PyCardDAV(object):
             self._settings['auth'] = HTTPDigestAuth(user, passwd)
         self._default_headers = {"User-Agent": "pyCardDAV"}
 
-        headers = self.headers
-        headers['Depth'] = '1'
-        response = self.session.request('OPTIONS',
-                                        self.url.resource,
-                                        headers=headers,
-                                        **self._settings)
-        response.raise_for_status()   # raises error on not 2XX HTTP status code
-        if response.headers['DAV'].count('addressbook') == 0:
-            raise Exception("URL is not a CardDAV resource")
+        if verifyDAV:
+            headers = self.headers
+            headers['Depth'] = '1'
+            response = self.session.request('OPTIONS',
+                                            self.url.resource,
+                                            headers=headers,
+                                            **self._settings)
+            response.raise_for_status()   # raises error on not 2XX HTTP status code
+            if response.headers['DAV'].count('addressbook') == 0:
+                raise Exception("URL is not a CardDAV resource")
 
     @property
     def verify(self):
